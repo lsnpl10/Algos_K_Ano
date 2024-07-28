@@ -4,25 +4,28 @@ import argparse
 import numpy as np
 import pandas as pd
 from metrics import NCP, DM, CAVG
-
+import itertools
 from algorithms import (
         k_anonymize,
         read_tree)
 from datasets import get_dataset_params
 from utils.data import read_raw, write_anon, numberize_categories
 
-parser = argparse.ArgumentParser('K-Anonymize')
-parser.add_argument('--method', type=str, default='datafly',
-                    help="K-Anonymity Method")
-parser.add_argument('--k', type=int, default=2,
-                    help="K-Anonymity or L-Diversity")
-parser.add_argument('--dataset', type=str, default='segmentation',
-                    help="Dataset to anonymize")
+
+def get_combinations(lst):
+    all_combinations = []
+    for r in range(1, len(lst) + 1):
+        combinations_r = [list(comb) for comb in itertools.combinations(lst, r)]
+        all_combinations.extend(combinations_r)
+    return all_combinations
+
 
 class Anonymizer:
     def __init__(self, args):
         self.method = args.method
-        assert self.method in ["mondrian", "topdown", "cluster", "mondrian_ldiv", "classic_mondrian", "datafly", "ola", "incognito"]
+        #assert self.method in ["mondrian", "topdown", "cluster", "mondrian_ldiv", "classic_mondrian", "datafly", "ola", "incognito"]
+        #cluster déjà fait et incognito très long donc à voir plus tard
+        assert self.method in ["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola", "incognito"]
         self.k = args.k
         self.data_name = args.dataset
         self.csv_path = args.dataset+'.csv'
@@ -52,9 +55,7 @@ class Anonymizer:
     def anonymize(self):
         data = pd.read_csv(self.data_path, delimiter=';')
         ATT_NAMES = list(data.columns)
-        
-        data_params = get_dataset_params(self.data_name)
-        QI_INDEX = data_params['qi_index']
+    
         IS_CAT2 = data_params['is_category']
 
         QI_NAMES = list(np.array(ATT_NAMES)[QI_INDEX])
@@ -135,7 +136,7 @@ class Anonymizer:
         print(f"CAVG score (near 1 is better): BEFORE: {raw_cavg_score:.3f} || AFTER: {anon_cavg_score:.3f}")
         print(f"DM score (lower is better): BEFORE: {raw_dm_score} || AFTER: {anon_dm_score}")
         print(f"Time execution: {runtime:.3f}s")
-
+        print(f"QID:{QI_NAMES}")
         return ncp_score, raw_cavg_score, anon_cavg_score, raw_dm_score, anon_dm_score
 
 
@@ -145,5 +146,40 @@ def main(args):
     
 
 if __name__ == '__main__':
-    args = parser.parse_args()
-    main(args)
+    DATASETS=['movie']
+    #DATASETS=['movie','analysis','segmentation','distributionmovie','distributionanalysis','distributionsegmentation']
+    algos=["mondrian"]
+    #algos=["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola"]
+    k_list=[5]
+    #k_list=[2,5,10,15,20,30,50,75,100,150,200,300,500]
+    #algos=["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola","incognito","cluster"]
+    
+    for dataset in DATASETS:
+        if dataset == 'analysis':
+            TAILLE_DATA_TEST=[50,100,150,250,500,750,1000,1250,1500,1750,2000,2216]
+        elif dataset == 'movie':
+            TAILLE_DATA_TEST=[50]
+            #TAILLE_DATA_TEST=[50,100,150,250,350,500,700,943]
+        elif dataset=='segmentation':
+            TAILLE_DATA_TEST=[500,2000,5000,10000,15000,25000,35000,45000,53503]
+        
+        data_params = get_dataset_params(dataset)
+        QI_INDEXs = data_params['qi_index']
+        QI_INDEX_list = get_combinations(QI_INDEXs)
+        
+        for QI_INDEX in QI_INDEX_list :
+            #print('QI_INDEX:',QI_INDEX)
+            for taille in TAILLE_DATA_TEST: 
+                for algo in algos:
+                    for k in k_list:               
+                        for i in range (1):
+                            
+                            parser = argparse.ArgumentParser('K-Anonymize')
+                            parser.add_argument('--method', type=str, default=algo,
+                                                help="K-Anonymity Method")
+                            parser.add_argument('--k', type=int, default=k,
+                                                help="K-Anonymity or L-Diversity")
+                            parser.add_argument('--dataset', type=str, default=dataset,
+                                                help="Dataset to anonymize")
+                            args = parser.parse_args()
+                            main(args)

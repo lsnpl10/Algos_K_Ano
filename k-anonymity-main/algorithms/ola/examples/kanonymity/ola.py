@@ -15,7 +15,7 @@ from crowds.kanonymity.ola import anonymize
 from crowds.kanonymity.information_loss import dm_star_loss,entropy_loss,prec_loss
 from crowds.kanonymity.generalizations import GenRule
 
-DATASET='segmentation'
+DATASET='analysis'
 
 
 # Globally pandas printing options: Show all columns and rows if displaying tables.

@@ -12,8 +12,6 @@ from .top_down_greedy_anonymization import \
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from utils.data import reorder_columns, restore_column_order
 
-
-
 def tdg_anonymize(k, att_trees, data, qi_index, sa_index, **kwargs):
     """
     Top-Down Greedy Anonymization
