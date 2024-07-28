@@ -94,7 +94,20 @@ class Anonymizer:
                 'data_name': self.data_name,
                 'dgh_folder': self.gen_path,
                 'res_folder': self.anon_folder})
-
+            
+        if self.method == AnonMethod.OLA:
+            anon_params.update({
+                'data': data,
+                "columns_names":ATT_NAMES,
+                'QI_INDEX': QI_INDEX,
+                'QI_NAMES': QI_NAMES,
+                'GEN_PATH': self.gen_path,
+                'data_name': self.data_name,
+                'K_VALUE': self.k,
+                'MAX_SUPPRESSION': 0.0,
+                'INFO_LOSS_CHOICE': "dm_star_loss" #"dm_star_loss", "entropy_loss","prec_loss"
+                })
+            
         anon_params.update({'data': raw_data})
 
         print(f"Anonymize with {self.method}")
@@ -148,7 +161,7 @@ def main(args):
 if __name__ == '__main__':
     DATASETS=['movie']
     #DATASETS=['movie','analysis','segmentation','distributionmovie','distributionanalysis','distributionsegmentation']
-    algos=["mondrian"]
+    algos=["ola"]
     #algos=["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola"]
     k_list=[5]
     #k_list=[2,5,10,15,20,30,50,75,100,150,200,300,500]

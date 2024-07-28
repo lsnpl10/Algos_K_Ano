@@ -8,9 +8,6 @@ from mergesort import MergeSort
 import pandas as pd
 import numpy as n
 
-#A supprimer !!!!!!!
-global_column_data_a_supprimer = None
-
 class Incognito:
     def __init__(self, csv_path):
         self.combinations_list = []

@@ -4,6 +4,7 @@ from .basic_mondrian import basic_mondrian_anonymize, read_tree, mondrian_ldiv_a
 from .clustering_based import cluster_based_anonymize
 from .top_down_greedy import tdg_anonymize
 from utils.types import AnonMethod
+from .ola import ola_anonymize
 
 def k_anonymize(anon_params):
 
@@ -57,5 +58,16 @@ def k_anonymize(anon_params):
             anon_params["data_name"], 
             anon_params["dgh_folder"],
             anon_params['res_folder'])
-
+    
+    if anon_params["name"] == AnonMethod.OLA:
+        return ola_anonymize(
+            anon_params["data"], 
+            anon_params["columns_names"], 
+            anon_params["QI_INDEX"], 
+            anon_params["QI_NAMES"], 
+            anon_params["GEN_PATH"], 
+            anon_params["data_name"],
+            anon_params['K_VALUE'],
+            anon_params['MAX_SUPPRESSION'],
+            anon_params['INFO_LOSS_CHOICE'])
 
