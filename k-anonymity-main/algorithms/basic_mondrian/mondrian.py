@@ -428,5 +428,5 @@ def mondrian_l_diversity(att_trees, data, L, QI_num, SA_num):
             for s in range(len(partition.member[i]) - len(SA_INDEX), len(partition.member[i])):
                 temp_for_SA = temp_for_SA + [partition.member[i][s]]
             result.append(temp + temp_for_SA)
-
+   # print("L=",L)
     return (result, rtime)
