@@ -61,7 +61,7 @@ def get_dataset_params(name):
     return {
         'qi_index': QI_INDEX,
         # 'is_category': IS_CAT,
-        'dico': dico,
+        'dico': dico, #dico des is_cat correspondant à la combinaison de qids
         'target_var': target_var
         #'max_numeric': max_numeric
     }

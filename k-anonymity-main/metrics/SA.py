@@ -4,38 +4,56 @@
 
 class metric_sa:
     
-    def __init__(self, anon_data, qi_index, sa_index) -> None:
+    def __init__(self, anon_data, qi_index, sa_index, threshold) -> None:
         self.anon_data = anon_data
         self.qi_index = qi_index
         self.sa_index = sa_index
         self.num_qi = len(qi_index)
-        print("sa",sa_index)
-    def compute_eq(self): #calcule les classes d'aquivalences et le nombre d'éléments par classe
-        self.eq_count = {}
-        for record in self.anon_data:
-            qi_values = []
-            for idx, qi_id in enumerate(self.qi_index):
-                value = record[qi_id]
-                qi_values.append(value)
-            print("qi_values",qi_values)
-            # Make set, because set is hashable
-            eq = tuple(qi_values)
-            print("eq",eq)
-            # Count set of qi values
-            if eq not in self.eq_count.keys():
-                self.eq_count[eq] = 0
-            self.eq_count[eq] += 1
-            print(self.eq_count[eq])
-    
-    
-    
+        self.threshold=threshold
+        # print("sa",sa_index)
+        # print(anon_data)
+        
+    def calculate_equivalence_classes(self):
+        from collections import defaultdict, Counter
+        
+        # Dictionary to hold equivalence classes
+        equivalence_classes = defaultdict(list)
+        
+        # Group rows by quasi-identifiers
+        for row in self.anon_data:
+            qi_values = tuple(row[index] for index in self.qi_index)
+            #print("qi_values",qi_values) #recupérer les valeurs des QIDs 
+            equivalence_classes[qi_values].append(row)
+        #print("equivalence_classes.items()",equivalence_classes.items()) #dictionnaire des lignes avec {[(combi_QIDs),[lignes associées]],...}
+        
+        # Calculate sensitive attribute distributions for each class
+        sensitive_distributions = {}
+        #pour chaque classe d'équivalence, on récupère les sa_values
+        for qi_values, rows in equivalence_classes.items():
+            #print("qi_values",qi_values)
+            sa_values = [row[self.sa_index] for row in rows] #liste des sa par EQ
+            #print("sa_values",sa_values)
+            count = Counter(sa_values) #dico {sa_val:nbre de fois dans la EQ,...} pour tous les sa de la classe
+            total = len(sa_values) #nombre d'éléments dans la EQ
+            #print("count,total",count,total)
+            distribution = {sa: (count[sa] / total) * 100 for sa in count} #dico {sa_value:% de présence dans la EQ} pour tous les sa de la classe
+            #print("distribution",distribution)
+            sensitive_distributions[qi_values] = distribution
+            #print("sensitive_distributions[qi_values]",sensitive_distributions[qi_values])
+        # Number of equivalence classes
+        num_equivalence_classes = len(equivalence_classes)
+        # print("num_equivalence_classes",num_equivalence_classes)
+        # print("sensitive_distributions",sensitive_distributions) #dico avec {(combi_qi): {sa:%...},...}
+        return sensitive_distributions, num_equivalence_classes
     
     def compute_score(self):
-        self.compute_eq()
-        metric_sa = 0
-        nbre_eq=0
-        for eq in self.eq_count.keys():
-            eq_count = self.eq_count[eq]
-            print("eq_count",eq_count)
-        
+        # Get sensitive distributions and number of equivalence classes
+        sensitive_distributions, num_equivalence_classes = self.calculate_equivalence_classes()
+        # Calculate the score based on the given threshold
+        score = 0
+        for distribution in sensitive_distributions.values():
+            if any(percentage > self.threshold for percentage in distribution.values()):
+                    score+=1
+        metric_sa=(score/num_equivalence_classes)
         return metric_sa
+        

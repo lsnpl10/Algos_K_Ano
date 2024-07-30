@@ -166,12 +166,18 @@ class Anonymizer:
         anon_dm = DM(anon_data, QI_INDEX, self.k)
         anon_dm_score = anon_dm.compute_score()
 
-        raw_sa = metric_sa(raw_data, QI_INDEX, sa_index)
-        raw_sa_score = raw_sa.compute_score()
-
-        anon_sa = metric_sa(anon_data, QI_INDEX, sa_index)
-        anon_sa_score = anon_sa.compute_score()
-
+        # raw_sa = metric_sa(raw_data, QI_INDEX, sa_index)
+        # raw_sa_score = raw_sa.compute_score()
+        
+        #sa metric
+        
+        thresholds=[10, 20, 30, 40, 50,60,70,80,90,100]
+        anon_sa_scores = []
+        for threshold in thresholds:
+            anon_sa = metric_sa(anon_data, QI_INDEX, sa_index, threshold)
+            anon_sa_score = anon_sa.compute_score()
+            anon_sa_scores.append(anon_sa_score)
+            
         # Average Equivalence Class
 
         raw_cavg = CAVG(raw_data, QI_INDEX, self.k)
@@ -183,23 +189,23 @@ class Anonymizer:
         print(f"NCP score (lower is better): {ncp_score:.3f}")
         print(f"CAVG score (near 1 is better): BEFORE: {raw_cavg_score:.3f} || AFTER: {anon_cavg_score:.3f}")
         print(f"DM score (lower is better): BEFORE: {raw_dm_score} || AFTER: {anon_dm_score}")
-        print(f"Metric L-diversity : {anon_sa_score}")
+        print(f"Metric L-diversity : {anon_sa_scores}")
         print(f"Time execution: {runtime:.3f}s")
         print(f"QID:{QI_NAMES}")
-        return ncp_score, raw_cavg_score, anon_cavg_score, raw_dm_score, anon_dm_score, runtime, anon_sa_score
+        return ncp_score, raw_cavg_score, anon_cavg_score, raw_dm_score, anon_dm_score, runtime, anon_sa_scores
 
 
 def main(args):
     anonymizer = Anonymizer(args)
     anonymizer.anonymize()
-    ncp_score, raw_cavg_score, anon_cavg_score, raw_dm_score, anon_dm_score, runtime, metric_sa = anonymizer.anonymize()
+    ncp_score, raw_cavg_score, anon_cavg_score, raw_dm_score, anon_dm_score, runtime, anon_sa_scores = anonymizer.anonymize()
 
 if __name__ == '__main__':
     
     DATASETS=['littlemovie']
     #DATASETS=['movie','analysis','segmentation','distributionmovie','distributionanalysis','distributionsegmentation', 'littlemovie','littleanalysis','littlesegmentation']
-    algos=["mondrian"]
-    #algos=["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola"]
+    #algos=["mondrian"]
+    algos=["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola"]
     k_list=[5]
     #k_list=[2,5,10,15,20,30,50,75,100,150,200,300,500]
    # algos=["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola","cluster"]
@@ -222,7 +228,7 @@ if __name__ == '__main__':
             for taille_ds in TAILLE_DATA_TEST: 
                 for algo in algos:
                     for k in k_list:
-                        print(k)
+                        print("k=",k)
                         for i in range (1):
                             print("taille DS :", taille_ds)
                             parser = argparse.ArgumentParser('K-Anonymize')
