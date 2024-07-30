@@ -10,7 +10,7 @@ from algorithms import (
         read_tree)
 from datasets import get_dataset_params
 from utils.data import read_raw, write_anon, numberize_categories
-
+import csv
 
 def get_combinations(lst):
     all_combinations = []
@@ -18,6 +18,24 @@ def get_combinations(lst):
         combinations_r = [list(comb) for comb in itertools.combinations(lst, r)]
         all_combinations.extend(combinations_r)
     return all_combinations
+
+
+def write_results(results, first_write=False):
+    fieldnames = [
+        "Num_test", "iteration", "dataset", "taille_ds", "algo", "parameters_algo",
+        "K", "Nbre_QIDs", "QIDs", "time", "NCP", "CAVG_before", "CAVG_after",
+        "DM_before", "DM_after", "L_div_score"
+    ]
+    
+    mode = 'w' if first_write else 'a'
+    
+    with open('résultats.csv', mode, newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
+        
+        if first_write:
+            writer.writeheader()
+        
+        writer.writerow(results)
 
 
 class Anonymizer:
@@ -200,7 +218,7 @@ class Anonymizer:
 
 def main(args):
     anonymizer = Anonymizer(args)
-    anonymizer.anonymize()
+    return anonymizer.anonymize()
     #ncp_score, raw_cavg_score, anon_cavg_score, raw_dm_score, anon_dm_score, runtime, anon_sa_scores = anonymizer.anonymize()
 
 if __name__ == '__main__':
@@ -211,8 +229,9 @@ if __name__ == '__main__':
     #algos=["mondrian", "topdown", "classic_mondrian", "datafly", "ola"]
     #k_list=[2]
     k_list=[2,5,10,15,20,30,50,75,100,150,200,300,500]
-   # algos=["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola","cluster"]
-    
+    #algos=["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola","cluster"]
+    num_test = 0
+    first_write = True
     for dataset in DATASETS:
         if dataset == 'analysis' or dataset == 'littleanalysis' or dataset == 'distributionanalysis':
             TAILLE_DATA_TEST=[50,100,150,250,500,750,1000,1250,1500,1750,2000,2216]
@@ -264,7 +283,55 @@ if __name__ == '__main__':
                                                 print("STATIC")
                                                 type_hierarchy="static"
                                             args.use_is_cat2 = use_is_cat2
-                                            main(args)
+                                            results=main(args)
+                                            num_test += 1
+                                            
+                                            parameters_algo = type_hierarchy if algo == 'classic_mondrian' else (info_loss_choice if algo == 'ola' else "0")
+                                            
+                                            write_results({
+                                                "Num_test": num_test,
+                                                "iteration": i,
+                                                "dataset": dataset,
+                                                "taille_ds": taille_ds,
+                                                "algo": algo,
+                                                "parameters_algo": parameters_algo,
+                                                "K": k,
+                                                "Nbre_QIDs": results[8],
+                                                "QIDs": ','.join(results[7]),
+                                                "time": results[5],
+                                                "NCP": results[0],
+                                                "CAVG_before": results[1],
+                                                "CAVG_after": results[2],
+                                                "DM_before": results[3],
+                                                "DM_after": results[4],
+                                                "L_div_score": ','.join(map(str, results[6]))
+                                            }, first_write)
+                                            
+                                            first_write = False
                                     else:
                                         main(args)
-                                    #ncp_score, raw_cavg_score, anon_cavg_score, raw_dm_score, anon_dm_score, runtime = main(args)
+                                        results = main(args)
+                                        num_test += 1
+                                        
+                                        parameters_algo = info_loss_choice if algo == 'ola' else "0"
+                                        
+                                        write_results({
+                                            "Num_test": num_test,
+                                            "iteration": i,
+                                            "dataset": dataset,
+                                            "taille_ds": taille_ds,
+                                            "algo": algo,
+                                            "parameters_algo": parameters_algo,
+                                            "K": k,
+                                            "Nbre_QIDs": results[8],
+                                            "QIDs": ','.join(results[7]),
+                                            "time": results[5],
+                                            "NCP": results[0],
+                                            "CAVG_before": results[1],
+                                            "CAVG_after": results[2],
+                                            "DM_before": results[3],
+                                            "DM_after": results[4],
+                                            "L_div_score": ','.join(map(str, results[6]))
+                                        }, first_write)
+                                        
+                                        first_write = False
