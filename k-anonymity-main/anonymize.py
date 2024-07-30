@@ -223,8 +223,7 @@ def main(args):
 
 if __name__ == '__main__':
     
-    DATASETS=['littlemovie']
-    #DATASETS=['movie','analysis','segmentation','distributionmovie','distributionanalysis','distributionsegmentation', 'littlemovie','littleanalysis','littlesegmentation']
+    DATASETS=['movie','analysis','segmentation','distributionmovie','distributionanalysis','distributionsegmentation', 'littlemovie','littleanalysis','littlesegmentation']
     algos=["classic_mondrian"]
     #algos=["mondrian", "topdown", "classic_mondrian", "datafly", "ola"]
     #k_list=[2]
