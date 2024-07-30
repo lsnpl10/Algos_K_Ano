@@ -14,6 +14,12 @@ class Dataset(Enum):
     MOVIE = 'movie'
     ANALYSIS = 'analysis'
     SEGMENTATION = 'segmentation'
+    DISTRIBUTIONSEGMENTATION='distributionsegmentation'
+    DISTRIBUTIONMOVIE='distributionmovie'
+    DISTRIBUTIONANALYSIS='distributionanalysis'
+    LITTLESEGMENTATION='littlesegmentation'
+    LITTLEMOVIE='littlemovie'
+    LITTLEANALYSIS='littleanalysis'
 
     def __str__(self):
         return self.value
@@ -44,6 +50,9 @@ class AnonMethod(Enum):
 
     # Datafly
     DATAFLY = 'datafly'
+    
+    #incognito
+    INCOGNITO = 'incognito'
 
     def __str__(self):
         return self.value

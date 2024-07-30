@@ -19,18 +19,20 @@ class DM:
                 qi_values.append(value)
             
             # Make set, because set is hashable
-            eq = tuple(qi_values)
-
+            eq = tuple(qi_values) #classe d'équivalence (combi QIDS)
+            print("eq",eq)
             # Count set of qi values
             if eq not in self.eq_count.keys():
                 self.eq_count[eq] = 0
-            self.eq_count[eq] += 1
-
+            self.eq_count[eq] += 1 #compte nombre d'éléments par classe d'équiv
+            print('ici',self.eq_count[eq])
+            
     def compute_score(self):
         self.compute_eq()
         dm = 0
         for eq in self.eq_count.keys():
             eq_count = self.eq_count[eq]
+            print("eq_count",eq_count)
             if eq_count >= self.k:
                 dm += (eq_count*eq_count)
             else:

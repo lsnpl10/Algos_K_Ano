@@ -3,7 +3,7 @@ import os
 import argparse
 import numpy as np
 import pandas as pd
-from metrics import NCP, DM, CAVG
+from metrics import NCP, DM, CAVG, metric_sa
 import itertools
 from algorithms import (
         k_anonymize,
@@ -29,13 +29,12 @@ class Anonymizer:
         self.k = args.k
         self.data_name = args.dataset
         self.csv_path = args.dataset+'.csv'
-
+        self.taille_ds=args.taille_ds
         # Data path
         self.path = os.path.join('data', args.dataset)  # trailing /
 
         # Dataset path
         self.data_path = os.path.join(self.path, self.csv_path)
-
         # Generalization hierarchies path
         self.gen_path = os.path.join(
             self.path,
@@ -46,7 +45,7 @@ class Anonymizer:
             'results', 
             args.dataset, 
             self.method)
-
+        #print(res_folder) #path results\dataset\algo
         # path for anonymized datasets
         self.anon_folder = res_folder  # trailing /
         
@@ -55,10 +54,18 @@ class Anonymizer:
     def anonymize(self):
         data = pd.read_csv(self.data_path, delimiter=';')
         ATT_NAMES = list(data.columns)
-    
-        IS_CAT2 = data_params['is_category']
-
+        print(ATT_NAMES)
+        dico=data_params['dico']
+        sa_name=data_params['target_var']
+        sa_index=ATT_NAMES.index(sa_name)
+        print(sa_index)
+        
+        IS_CAT2 = [dico[qi] for qi in QI_INDEX]
+        #IS_CAT2 = data_params['is_category'] #pour les algos qui implémentent les nombres dynamiquement
+        
         QI_NAMES = list(np.array(ATT_NAMES)[QI_INDEX])
+        print('qi_names:',QI_NAMES)
+        nbre_qids=len(QI_INDEX)
         IS_CAT = [True] * len(QI_INDEX) # is all cat because all hierarchies are provided
         SA_INDEX = [index for index in range(len(ATT_NAMES)) if index not in QI_INDEX]
         SA_var = [ATT_NAMES[i] for i in SA_INDEX]
@@ -72,7 +79,7 @@ class Anonymizer:
         raw_data, header = read_raw(
             self.path, 
             self.data_name, 
-            QI_INDEX, IS_CAT)
+            self.taille_ds, QI_INDEX, IS_CAT)
 
         anon_params = {
             "name" :self.method,
@@ -89,12 +96,17 @@ class Anonymizer:
 
         if self.method == AnonMethod.DATAFLY:
             anon_params.update({
+                'K_VALUE': self.k,
+                'dataset': data,
+                "columns_names":ATT_NAMES,
                 'qi_names': QI_NAMES,
-                'csv_path': self.data_path,
+                #'csv_path': self.data_path,
                 'data_name': self.data_name,
                 'dgh_folder': self.gen_path,
-                'res_folder': self.anon_folder})
-            
+                'res_folder': self.anon_folder,
+                'csv_path': self.data_path,
+                'taille_ds':self.taille_ds})
+  
         if self.method == AnonMethod.OLA:
             anon_params.update({
                 'data': data,
@@ -106,6 +118,18 @@ class Anonymizer:
                 'K_VALUE': self.k,
                 'MAX_SUPPRESSION': 0.0,
                 'INFO_LOSS_CHOICE': "dm_star_loss" #"dm_star_loss", "entropy_loss","prec_loss"
+                })
+            
+        if self.method == AnonMethod.INCOGNITO:
+            anon_params.update({
+                'data': data,
+                'csv_path': self.data_path,
+                "columns_names":ATT_NAMES,
+                'QI_INDEX': QI_INDEX,
+                'QI_NAMES': QI_NAMES,
+                'GEN_PATH': self.gen_path,
+                'data_name': self.data_name,
+                'K_VALUE': self.k
                 })
             
         anon_params.update({'data': raw_data})
@@ -120,7 +144,12 @@ class Anonymizer:
                 anon_data, 
                 header, 
                 self.k, 
-                self.data_name)
+                self.data_name,
+                self.taille_ds, 
+                QI_NAMES, 
+                nbre_qids, 
+                self.method)
+
 
         if self.method == AnonMethod.CLASSIC_MONDRIAN:
             ncp_score, runtime = runtime
@@ -137,6 +166,12 @@ class Anonymizer:
         anon_dm = DM(anon_data, QI_INDEX, self.k)
         anon_dm_score = anon_dm.compute_score()
 
+        raw_sa = metric_sa(raw_data, QI_INDEX, sa_index)
+        raw_sa_score = raw_sa.compute_score()
+
+        anon_sa = metric_sa(anon_data, QI_INDEX, sa_index)
+        anon_sa_score = anon_sa.compute_score()
+
         # Average Equivalence Class
 
         raw_cavg = CAVG(raw_data, QI_INDEX, self.k)
@@ -148,32 +183,34 @@ class Anonymizer:
         print(f"NCP score (lower is better): {ncp_score:.3f}")
         print(f"CAVG score (near 1 is better): BEFORE: {raw_cavg_score:.3f} || AFTER: {anon_cavg_score:.3f}")
         print(f"DM score (lower is better): BEFORE: {raw_dm_score} || AFTER: {anon_dm_score}")
+        print(f"Metric L-diversity : {anon_sa_score}")
         print(f"Time execution: {runtime:.3f}s")
         print(f"QID:{QI_NAMES}")
-        return ncp_score, raw_cavg_score, anon_cavg_score, raw_dm_score, anon_dm_score
+        return ncp_score, raw_cavg_score, anon_cavg_score, raw_dm_score, anon_dm_score, runtime, anon_sa_score
 
 
 def main(args):
     anonymizer = Anonymizer(args)
     anonymizer.anonymize()
-    
+    ncp_score, raw_cavg_score, anon_cavg_score, raw_dm_score, anon_dm_score, runtime, metric_sa = anonymizer.anonymize()
 
 if __name__ == '__main__':
-    DATASETS=['movie']
-    #DATASETS=['movie','analysis','segmentation','distributionmovie','distributionanalysis','distributionsegmentation']
-    algos=["ola"]
+    
+    DATASETS=['littlemovie']
+    #DATASETS=['movie','analysis','segmentation','distributionmovie','distributionanalysis','distributionsegmentation', 'littlemovie','littleanalysis','littlesegmentation']
+    algos=["mondrian"]
     #algos=["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola"]
     k_list=[5]
     #k_list=[2,5,10,15,20,30,50,75,100,150,200,300,500]
-    #algos=["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola","incognito","cluster"]
+   # algos=["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola","cluster"]
     
     for dataset in DATASETS:
-        if dataset == 'analysis':
+        if dataset == 'analysis' or dataset == 'littleanalysis' or dataset == 'distributionanalysis':
             TAILLE_DATA_TEST=[50,100,150,250,500,750,1000,1250,1500,1750,2000,2216]
-        elif dataset == 'movie':
-            TAILLE_DATA_TEST=[50]
+        elif dataset == 'movie' or dataset == 'littlemovie' or dataset == 'distributionmovie':
+            TAILLE_DATA_TEST=[50,100]
             #TAILLE_DATA_TEST=[50,100,150,250,350,500,700,943]
-        elif dataset=='segmentation':
+        elif dataset=='segmentation' or dataset=='littlesegmentation' or dataset=='distributionsegmentation':
             TAILLE_DATA_TEST=[500,2000,5000,10000,15000,25000,35000,45000,53503]
         
         data_params = get_dataset_params(dataset)
@@ -182,11 +219,12 @@ if __name__ == '__main__':
         
         for QI_INDEX in QI_INDEX_list :
             #print('QI_INDEX:',QI_INDEX)
-            for taille in TAILLE_DATA_TEST: 
+            for taille_ds in TAILLE_DATA_TEST: 
                 for algo in algos:
-                    for k in k_list:               
+                    for k in k_list:
+                        print(k)
                         for i in range (1):
-                            
+                            print("taille DS :", taille_ds)
                             parser = argparse.ArgumentParser('K-Anonymize')
                             parser.add_argument('--method', type=str, default=algo,
                                                 help="K-Anonymity Method")
@@ -194,5 +232,8 @@ if __name__ == '__main__':
                                                 help="K-Anonymity or L-Diversity")
                             parser.add_argument('--dataset', type=str, default=dataset,
                                                 help="Dataset to anonymize")
+                            parser.add_argument('--taille_ds', type=int, default=taille_ds,
+                                                help="Taille dataset")
                             args = parser.parse_args()
                             main(args)
+                            #ncp_score, raw_cavg_score, anon_cavg_score, raw_dm_score, anon_dm_score, runtime = main(args)

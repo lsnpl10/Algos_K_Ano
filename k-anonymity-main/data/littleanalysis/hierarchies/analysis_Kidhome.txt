@@ -1,0 +1,3 @@
+0;sans_enfant;*
+1;avec_enfant;*
+2;avec_enfant;*

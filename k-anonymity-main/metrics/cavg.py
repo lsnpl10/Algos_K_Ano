@@ -19,7 +19,7 @@ class CAVG:
             
             # Make set, because set is hashable
             eq = tuple(qi_values)
-
+            #print(eq)
             # Count set of qi values
             if eq not in self.eq_count.keys():
                 self.eq_count[eq] = 0

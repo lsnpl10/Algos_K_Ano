@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import time
 from dgh import CsvTable
 from vertex import Vertex
@@ -9,32 +12,43 @@ import pandas as pd
 import numpy as n
 
 class Incognito:
-    def __init__(self, csv_path):
+    def __init__(self,data,csv_path,columns_names,QI_INDEX,QI_NAMES,GEN_PATH,data_name):
+        self.columns_names=columns_names
+        self.QI_INDEX=QI_INDEX
+        #self.GEN_PATH=GEN_PATH
+        self.dataname=data_name
         self.combinations_list = []
         self.main_graph = None
         self.k_anon_combinations = []
         self.checker = []
-        self.quasi_iden = list(n.array(column_names)[QI_INDEX])
+        self.quasi_iden = QI_NAMES
         #print(list(n.array(column_names)[QI_INDEX]))
         self.checker_quasi = []
         self.r_attribute_gen = {}
         self.dgh_paths = {}
-        header = "C://Users//lison//Source//Repos//MA2//TFE//5algos//k-anonymity-main//data//"+DATASET+"//hierarchies//"
+        header=GEN_PATH
+        #header = "C://Users//lison//Source//Repos//MA2//TFE//5algos//k-anonymity-main//data//"+DATASET+"//hierarchies//"
         for item in self.quasi_iden:
-            self.dgh_paths[item] = f'{header}//{DATASET}_hierarchy_{item}.csv'
+            self.dgh_paths[item] = f'{header}\\{data_name}_hierarchy_{item}.csv'  
         self.csv_dgh = CsvTable(
             csv_path, dgh_paths=self.dgh_paths, dgh_objs=None)
         self.dgh_trees = self.csv_dgh.dghs
-        self.table = pd.read_csv(csv_path, header=0, delimiter=';')
-        # self.table['date'] = pd.to_datetime(
-        #     self.table['date'], format='%m/%d/%Y')
-        # self.table['date_month'] = self.table['date'].dt.month
-        # self.table['date_day'] = self.table['date'].dt.day
-        # self.table['date_year'] = self.table['date'].dt.year
-        # self.table.drop('date', axis=1, inplace=True)
-        # self.table = self.csv_dgh.table.re
+        self.table=data
+        print(self.table.head(3))
+        print(type(self.table))
+        # self.table = pd.read_csv(csv_path, header=0, delimiter=';')
+        # print(self.table.head(3))
+        # print(type(self.table))
+        #print(self.table)
+        # # self.table['date'] = pd.to_datetime(
+        # #     self.table['date'], format='%m/%d/%Y')
+        # # self.table['date_month'] = self.table['date'].dt.month
+        # # self.table['date_day'] = self.table['date'].dt.day
+        # # self.table['date_year'] = self.table['date'].dt.year
+        # # self.table.drop('date', axis=1, inplace=True)
+        # # self.table = self.csv_dgh.table.re
         self.path = csv_path
-
+        #csv_path=nom du fichier à anonymiser
     def main_algorithm(self, kAnon):
         self.generate_quasi_combinations(1)
         self.create_graphs_for_r_attributes()
@@ -71,18 +85,18 @@ class Incognito:
 
             self.generate_quasi_combinations(i + 1)
             self.create_graphs_for_r_attributes()
-        print(f'len org: {total_comb}')
-        print(f'len kanon: {len(self.k_anon_combinations)}')
+        # print(f'len org: {total_comb}')
+        # print(f'len kanon: {len(self.k_anon_combinations)}')
 
     def view_gen_combinations(self):
 
-        print("Combinations that are k-Anon:")
+        #print("Combinations that are k-Anon:")
         for m in range(len(self.k_anon_combinations)):
             print(self.k_anon_combinations[m])
 
     def print_k_anon_tables(self):
 
-        print("Generalized Tables that are k-Anon:")
+        #print("Generalized Tables that are k-Anon:")
         for i in range(len(self.k_anon_combinations)):
             self.generalize_with_level(s=self.k_anon_combinations[i])
 
@@ -186,13 +200,13 @@ class Incognito:
 
     def add_new_elem(self, item, dgh):
         if item == n.nan:
-            print("item==nan")
+            #print("item==nan")
             return item
         if isinstance(item, float):
             try:
                 item = str(int(item))
             except:
-                print("except")
+                #print("except")
                 return n.nan
         else:
             item = str(item)
@@ -209,6 +223,7 @@ class Incognito:
         return new_table
 
     def get_table_comb(self, combs):
+        print("combs",combs)
         for i in reversed(range(1, len(self.quasi_iden)+1)):
             for comb in combs:
                 count = 0
@@ -221,13 +236,16 @@ class Incognito:
                 if count == len(arr):
                     print(f'Combination selected: {comb}')
                     return comb
+        print("ici")
         return None
 
     def return_kanon_table(self):
 
-        print("Generalized Table that is k-Anon:")
+        #print("Generalized Table that is k-Anon:")
         kanon_comb = self.get_table_comb(self.k_anon_combinations)
-        self.generalize_with_level(s=kanon_comb)
+        new_table=self.generalize_with_level(s=kanon_comb)
+        #print(new_table)
+        return new_table
 
     def generalize_with_level(self, s, k_anon=None):
         #print(f"avant = {self.table.iloc[2189]}")
@@ -262,8 +280,10 @@ class Incognito:
 
         if k_anon is not None:
             return self.check_table(k_anon, new_table)
-        new_table.to_csv(DATASET+'_result.csv')
-        # print(new_table)
+        #new_table.to_csv(DATASET+'_result.csv')
+        #self.new_table=new_table
+        #print((new_table))
+        return new_table
 
     def mark_all_gens(self, v):
         self.addListOfGeneralizations(v)
@@ -308,31 +328,25 @@ class Incognito:
             if v < kanon:
                 return False
         return True
-
-DATASETS=['movie','analysis','segmentation']
-
-for DATASET in DATASETS:
-    print(DATASET)
-    dataset_path = "C:\\Users\\lison\\Source\\Repos\\MA2\\TFE\\5algos\\k-anonymity-main\\data\\" + DATASET + "\\" + DATASET + ".csv"
     
-    with open(dataset_path, 'r') as file:
-        column_names = file.readline().strip().split(';')
-    data = pd.read_csv(dataset_path, sep=';', na_values='?', engine='python', skiprows=1, header=None, names=column_names)
-    if DATASET=='movie':
-        QI_INDEX=[3,4,5,6]
-    elif DATASET=='analysis': 
-        QI_INDEX = [1,2,3,5,6]
-    elif DATASET=='segmentation':
-        QI_INDEX = [1,2,3,4,5,6,18]
+def incognito_Anonymization(data,csv_path,columns_names,QI_INDEX,QI_NAMES,GEN_PATH,data_name,K_VALUE): 
     
+    data = pd.DataFrame(data, columns=columns_names)
     start_time = time.time() 
-    incog = Incognito(dataset_path)
-    incog.main_algorithm(2)
-    
+    #incog = Incognito(dataset_path)
+    incog = Incognito(data,csv_path,columns_names,QI_INDEX,QI_NAMES,GEN_PATH,data_name)
+    incog.main_algorithm(K_VALUE)
     # displaying generalizations
-    incog.view_gen_combinations()
+    #incog.view_gen_combinations()
     incog.checker = []
-    incog.return_kanon_table()
+    new_table=incog.return_kanon_table()
     
-    print(incog.checker)
-    print((time.time()-start_time)/60)
+
+    remaining_columns = [col for col in new_table.columns if col not in QI_NAMES]
+    new_column_order = QI_NAMES + remaining_columns
+    data_anonymized = new_table[new_column_order]
+    data_anonymized_final = data_anonymized.values.tolist()
+    run_time=time.time()-start_time
+    # print(incog.checker)
+    # print((time.time()-start_time))
+    return data_anonymized_final, run_time

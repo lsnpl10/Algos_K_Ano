@@ -33,27 +33,35 @@ def get_dataset_params(name):
         target_var = "disease"
         IS_CAT = [False, True, False]
         max_numeric = {"age": 50, "city_birth": None, "zip_code":50000}
-    elif name == Dataset.MOVIE:
-        QI_INDEX = [3, 4, 5, 6]
+        
+    elif name == Dataset.MOVIE or name == Dataset.DISTRIBUTIONMOVIE or name == Dataset.LITTLEMOVIE:
+        QI_INDEX = [3,4,5,6]
         target_var = "rating"
         IS_CAT = [False, True, True, True]
-        max_numeric = {"age": 50}
-    elif name == Dataset.ANALYSIS:
+        
+        #max_numeric = {"age": 50}
+    
+    elif name == Dataset.ANALYSIS or name == Dataset.DISTRIBUTIONANALYSIS or name == Dataset.LITTLEANALYSIS:
         QI_INDEX = [1,2,3,5,6]
         target_var = "Income"
         IS_CAT = [False, True, True, True, True]
         max_numeric = {"Year_Birth": 50}
-    elif name == Dataset.SEGMENTATION:
+    
+    elif name == Dataset.SEGMENTATION or name == Dataset.DISTRIBUTIONSEGMENTATION or name == Dataset.LITTLESEGMENTATION:
         QI_INDEX = [1,2,3,4,5,6,18]
         target_var = "Segmentation_Group"
         IS_CAT = [False, True, True, True, True, True, True]
         max_numeric = {"Age": 50}
+    
+    
     else:
         print(f"Not support {name} dataset")
         raise ValueError
+    dico = {qi: is_cat for qi, is_cat in zip(QI_INDEX, IS_CAT)}
     return {
         'qi_index': QI_INDEX,
-        'is_category': IS_CAT,
-        'target_var': target_var,
-        'max_numeric': max_numeric
+        # 'is_category': IS_CAT,
+        'dico': dico,
+        'target_var': target_var
+        #'max_numeric': max_numeric
     }

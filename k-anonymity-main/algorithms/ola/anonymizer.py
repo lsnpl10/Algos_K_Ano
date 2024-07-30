@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-run top_down_greedy_anonymization with given argv
-"""
-
 import copy
 import sys
 import os

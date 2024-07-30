@@ -5,6 +5,8 @@ from .clustering_based import cluster_based_anonymize
 from .top_down_greedy import tdg_anonymize
 from utils.types import AnonMethod
 from .ola import ola_anonymize
+from .incognito import incognito_anonymize
+
 
 def k_anonymize(anon_params):
 
@@ -52,12 +54,15 @@ def k_anonymize(anon_params):
 
     if anon_params["name"] == AnonMethod.DATAFLY:
         return datafly_anonymize(
-            anon_params["value"], 
-            anon_params["csv_path"], 
+            anon_params["value"],
+            anon_params["data"],
+            anon_params["columns_names"],  
             anon_params["qi_names"], 
             anon_params["data_name"], 
             anon_params["dgh_folder"],
-            anon_params['res_folder'])
+            anon_params['res_folder'],
+            anon_params["csv_path"],
+            anon_params["taille_ds"])
     
     if anon_params["name"] == AnonMethod.OLA:
         return ola_anonymize(
@@ -71,3 +76,13 @@ def k_anonymize(anon_params):
             anon_params['MAX_SUPPRESSION'],
             anon_params['INFO_LOSS_CHOICE'])
 
+    if anon_params["name"] == AnonMethod.INCOGNITO:
+        return incognito_anonymize(
+            anon_params["data"], 
+            anon_params["csv_path"],
+            anon_params["columns_names"], 
+            anon_params["QI_INDEX"], 
+            anon_params["QI_NAMES"], 
+            anon_params["GEN_PATH"], 
+            anon_params["data_name"],
+            anon_params['K_VALUE'])

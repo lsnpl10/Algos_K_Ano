@@ -10,13 +10,13 @@ def ola_Anonymization(data,columns_names,QI_INDEX,QI_NAMES, GEN_PATH,data_name,K
     # os.chdir(target_dir)
     # sys.path.append(target_dir)
     try:
-        from crowds.kanonymity.ola import anonymize
+        from algorithms.ola.crowds.kanonymity.ola import anonymize
         #print("Module imported successfully")
     except ModuleNotFoundError as e:
         print("Error importing module:", e)
-    from crowds.kanonymity.ola import anonymize
-    from crowds.kanonymity.information_loss import dm_star_loss,entropy_loss,prec_loss
-    from crowds.kanonymity.generalizations import GenRule
+    from algorithms.ola.crowds.kanonymity.ola import anonymize
+    from algorithms.ola.crowds.kanonymity.information_loss import dm_star_loss,entropy_loss,prec_loss
+    from algorithms.ola.crowds.kanonymity.generalizations import GenRule
     
     INFO_LOSS_DICT = {"dm_star_loss":dm_star_loss, "entropy_loss":entropy_loss,"prec_loss":prec_loss}
     
