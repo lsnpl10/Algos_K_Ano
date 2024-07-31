@@ -299,7 +299,7 @@ def Top_Down_Greedy_Anonymization(att_trees, data, k, QI_num, SA_num):
     init(att_trees, data, k, QI_num, SA_num)
     result = []
     middle = []
-    for i in tqdm(range(QI_LEN)):
+    for i in tqdm(range(QI_LEN), disable=True):
         if IS_CAT[i] is False:
             QI_RANGE.append(ATT_TREES[i].range)
             middle.append(ATT_TREES[i].value)
@@ -311,7 +311,7 @@ def Top_Down_Greedy_Anonymization(att_trees, data, k, QI_num, SA_num):
     anonymize(whole_partition)
     rtime = float(time.time() - start_time)
     dp = 0.0
-    for sub_partition in tqdm(RESULT):
+    for sub_partition in tqdm(RESULT, disable=True):
         gen_result = sub_partition.middle
 
         for i in range(len(sub_partition)):

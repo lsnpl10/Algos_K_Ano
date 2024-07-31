@@ -9,7 +9,7 @@ import os
 
 from .top_down_greedy_anonymization import \
     Top_Down_Greedy_Anonymization
-sys.path.insert(1, os.path.join(sys.path[0], '..'))
+#sys.path.insert(1, os.path.join(sys.path[0], '..'))
 from utils.data import reorder_columns, restore_column_order
 
 def tdg_anonymize(k, att_trees, data, qi_index, sa_index, **kwargs):

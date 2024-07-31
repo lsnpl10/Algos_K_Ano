@@ -352,8 +352,8 @@ def mondrian(data, k, relax=False, QI_num=-1):
     ncp /= data_size
     if __DEBUG:
         from decimal import Decimal
-        print("Discernability Penalty=%.2E" % Decimal(str(dp)))
-        print("size of partitions=%d" % len(RESULT))
-        print("K=%d" % k)
-        print("NCP = %.2f %%" % ncp)
+        # print("Discernability Penalty=%.2E" % Decimal(str(dp)))
+        # print("size of partitions=%d" % len(RESULT))
+        # print("K=%d" % k)
+        # print("NCP = %.2f %%" % ncp)
     return (result, (ncp, rtime))

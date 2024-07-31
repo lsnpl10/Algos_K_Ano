@@ -371,7 +371,7 @@ def mondrian(att_trees, data, k, QI_num, SA_num):
     result = []
     middle = []
     wtemp = []
-    for i in tqdm(range(QI_LEN)):
+    for i in tqdm(range(QI_LEN), disable=True):
         if IS_CAT[i] is False:
             QI_RANGE.append(ATT_TREES[i].range)
             wtemp.append((0, len(ATT_TREES[i].sort_value) - 1))

@@ -74,17 +74,17 @@ class Anonymizer:
     def anonymize(self):
         data = pd.read_csv(self.data_path, delimiter=';')
         ATT_NAMES = list(data.columns)
-        print(ATT_NAMES)
+        #print(ATT_NAMES)
         dico=data_params['dico']
         sa_name=data_params['target_var']
         sa_index=ATT_NAMES.index(sa_name)
-        print(sa_index)
+        #print(sa_index)
         
         IS_CAT2 = [dico[qi] for qi in QI_INDEX]
         #IS_CAT2 = data_params['is_category'] #pour les algos qui implémentent les nombres dynamiquement
         
         QI_NAMES = list(np.array(ATT_NAMES)[QI_INDEX])
-        print('qi_names:',QI_NAMES)
+        #print('qi_names:',QI_NAMES)
         nbre_qids=len(QI_INDEX)
         IS_CAT = [True] * len(QI_INDEX) # is all cat because all hierarchies are provided
         SA_INDEX = [index for index in range(len(ATT_NAMES)) if index not in QI_INDEX]
@@ -155,7 +155,7 @@ class Anonymizer:
             
         anon_params.update({'data': raw_data})
 
-        print(f"Anonymize with {self.method}")
+        #print(f"Anonymize with {self.method}")
         anon_data, runtime = k_anonymize(anon_params)
 
         # Write anonymized table
@@ -207,12 +207,12 @@ class Anonymizer:
         anon_cavg = CAVG(anon_data, QI_INDEX, self.k)
         anon_cavg_score = anon_cavg.compute_score()
 
-        print(f"NCP score (lower is better): {ncp_score:.3f}")
-        print(f"CAVG score (near 1 is better): BEFORE: {raw_cavg_score:.3f} || AFTER: {anon_cavg_score:.3f}")
-        print(f"DM score (lower is better): BEFORE: {raw_dm_score} || AFTER: {anon_dm_score}")
-        print(f"Metric L-diversity : {anon_sa_scores}")
-        print(f"Time execution: {runtime:.3f}s")
-        print(f"QID:{QI_NAMES}")
+        # print(f"NCP score (lower is better): {ncp_score:.3f}")
+        # print(f"CAVG score (near 1 is better): BEFORE: {raw_cavg_score:.3f} || AFTER: {anon_cavg_score:.3f}")
+        # print(f"DM score (lower is better): BEFORE: {raw_dm_score} || AFTER: {anon_dm_score}")
+        # print(f"Metric L-diversity : {anon_sa_scores}")
+        #print(f"Time execution: {runtime:.3f}s")
+        #print(f"QID:{QI_NAMES}")
         return ncp_score, raw_cavg_score, anon_cavg_score, raw_dm_score, anon_dm_score, runtime, anon_sa_scores,QI_NAMES,nbre_qids,sa_name
 
 
@@ -227,29 +227,35 @@ if __name__ == '__main__':
     #algos=["datafly"]
     algos=["mondrian", "topdown", "classic_mondrian", "ola"]
     #k_list=[2]
-    k_list=[2,5,10,15,20,30,50,75,100,150,200,300,500]
     #algos=["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola","cluster"]
     num_test = 0
     first_write = True
     for dataset in DATASETS:
-        if dataset == 'analysis' or dataset == 'littleanalysis' or dataset == 'distributionanalysis':
-            TAILLE_DATA_TEST=[50,100,150,250,500,750,1000,1250,1500,1750,2000,2216]
-        elif dataset == 'movie' or dataset == 'littlemovie' or dataset == 'distributionmovie':
-            #TAILLE_DATA_TEST=[50]
-            TAILLE_DATA_TEST=[50,100,150,250,350,500,700,943]
-        elif dataset=='segmentation' or dataset=='littlesegmentation' or dataset=='distributionsegmentation':
-            TAILLE_DATA_TEST=[500,2000,5000,10000,15000,25000,35000,45000,53503]
+        if dataset == 'analysis' or dataset == 'littleanalysis' :
+            TAILLE_DATA_TEST=[100,200,500,750,1000,1250,1500,1750,2000,2216]
+            k_list=[2,5,10,15,20,30,50,100,150,200,300]
+        elif dataset == 'movie' or dataset == 'littlemovie' :
+            TAILLE_DATA_TEST=[50,100,200,350,500,700,943]
+            k_list=[2,5,10,15,20,30,50,75,100]
+        elif dataset=='distributionsegmentation':
+            TAILLE_DATA_TEST=[500,1000,2000,5000,10000,20000,30000,40000,53503]
+            k_list=[2,5,10,25,50,100,150,200,300,500]
+        elif dataset=='segmentation' or dataset=='littlesegmentation':
+            TAILLE_DATA_TEST=[2000,5000,10000,20000,30000,40000,53503]
+            k_list=[5,10,50,100,150,200,300,500]
         
         data_params = get_dataset_params(dataset)
         QI_INDEXs = data_params['qi_index']
-        QI_INDEX_list = get_combinations(QI_INDEXs)
-
+        #print("QI_INDEXs",QI_INDEXs)
+        QI_INDEX_list = [QI_INDEXs[:i] for i in range(1, len(QI_INDEXs) + 1)]
+        #print(QI_INDEX_list)
+        #QI_INDEX_list = get_combinations(QI_INDEXs)
         for QI_INDEX in QI_INDEX_list :
             for taille_ds in TAILLE_DATA_TEST: 
                 for algo in algos:
                     for k in k_list:
                         if k < taille_ds:
-                            print("k=",k)
+                            
                             if algo == 'ola':
                                 info_loss_choices = ["dm_star_loss", "entropy_loss", "prec_loss"]
                             else:
@@ -257,7 +263,10 @@ if __name__ == '__main__':
                             for info_loss_choice in info_loss_choices:
                                 print("info_loss_choice for OLA :",info_loss_choice)
                                 for i in range (3):
+                                    print("Algo:",algo)
                                     print("taille DS :", taille_ds)
+                                    print("k=",k)
+                                    print("nbre qids:", len(QI_INDEX))
                                     parser = argparse.ArgumentParser('K-Anonymize')
                                     parser.add_argument('--method', type=str, default=algo,
                                                         help="K-Anonymity Method")
@@ -274,10 +283,10 @@ if __name__ == '__main__':
                                     if algo == 'classic_mondrian':
                                         for use_is_cat2 in [False, True]:
                                             if use_is_cat2 == True :
-                                                print("DYNAMIC")
+                                                #print("DYNAMIC")
                                                 type_hierarchy="dynamic"
                                             else : 
-                                                print("STATIC")
+                                                #print("STATIC")
                                                 type_hierarchy="static"
                                             args.use_is_cat2 = use_is_cat2
                                             results=main(args)
@@ -335,6 +344,6 @@ if __name__ == '__main__':
                                             }, first_write)
                                             
                                             first_write = False
-                                            
+                                  
                                         except : 
                                             print("!!!!!!!!!datafly avec k>> par rapport à DS!!!!!!!")
