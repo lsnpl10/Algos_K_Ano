@@ -23,13 +23,13 @@ def get_combinations(lst):
 def write_results(results, first_write=False):
     fieldnames = [
         "Num_test", "iteration", "dataset", "taille_ds", "algo", "parameters_algo",
-        "K", "Nbre_QIDs", "QIDs", "time", "NCP", "CAVG_before", "CAVG_after",
+        "K", "Nbre_QIDs", "QIDs", "SA", "time", "NCP", "CAVG_before", "CAVG_after",
         "DM_before", "DM_after", "L_div_score"
     ]
     
     mode = 'w' if first_write else 'a'
     
-    with open('résultats.csv', mode, newline='') as csvfile:
+    with open('results_glob.csv', mode, newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
         
         if first_write:
@@ -213,7 +213,7 @@ class Anonymizer:
         print(f"Metric L-diversity : {anon_sa_scores}")
         print(f"Time execution: {runtime:.3f}s")
         print(f"QID:{QI_NAMES}")
-        return ncp_score, raw_cavg_score, anon_cavg_score, raw_dm_score, anon_dm_score, runtime, anon_sa_scores,QI_NAMES,nbre_qids
+        return ncp_score, raw_cavg_score, anon_cavg_score, raw_dm_score, anon_dm_score, runtime, anon_sa_scores,QI_NAMES,nbre_qids,sa_name
 
 
 def main(args):
@@ -224,8 +224,8 @@ def main(args):
 if __name__ == '__main__':
     
     DATASETS=['movie','analysis','segmentation','distributionmovie','distributionanalysis','distributionsegmentation', 'littlemovie','littleanalysis','littlesegmentation']
-    algos=["classic_mondrian"]
-    #algos=["mondrian", "topdown", "classic_mondrian", "datafly", "ola"]
+    #algos=["datafly"]
+    algos=["mondrian", "topdown", "classic_mondrian", "ola"]
     #k_list=[2]
     k_list=[2,5,10,15,20,30,50,75,100,150,200,300,500]
     #algos=["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola","cluster"]
@@ -235,18 +235,16 @@ if __name__ == '__main__':
         if dataset == 'analysis' or dataset == 'littleanalysis' or dataset == 'distributionanalysis':
             TAILLE_DATA_TEST=[50,100,150,250,500,750,1000,1250,1500,1750,2000,2216]
         elif dataset == 'movie' or dataset == 'littlemovie' or dataset == 'distributionmovie':
-            TAILLE_DATA_TEST=[50]
-            #TAILLE_DATA_TEST=[50,100,150,250,350,500,700,943]
+            #TAILLE_DATA_TEST=[50]
+            TAILLE_DATA_TEST=[50,100,150,250,350,500,700,943]
         elif dataset=='segmentation' or dataset=='littlesegmentation' or dataset=='distributionsegmentation':
             TAILLE_DATA_TEST=[500,2000,5000,10000,15000,25000,35000,45000,53503]
         
         data_params = get_dataset_params(dataset)
         QI_INDEXs = data_params['qi_index']
         QI_INDEX_list = get_combinations(QI_INDEXs)
-        #QI_INDEX_list=[[3, 4, 5, 6]]
 
         for QI_INDEX in QI_INDEX_list :
-            #print('QI_INDEX:',QI_INDEX)
             for taille_ds in TAILLE_DATA_TEST: 
                 for algo in algos:
                     for k in k_list:
@@ -297,6 +295,7 @@ if __name__ == '__main__':
                                                 "K": k,
                                                 "Nbre_QIDs": results[8],
                                                 "QIDs": ','.join(results[7]),
+                                                "SA": results[9],
                                                 "time": results[5],
                                                 "NCP": results[0],
                                                 "CAVG_before": results[1],
@@ -308,29 +307,34 @@ if __name__ == '__main__':
                                             
                                             first_write = False
                                     else:
-                                        main(args)
-                                        results = main(args)
-                                        num_test += 1
-                                        
-                                        parameters_algo = info_loss_choice if algo == 'ola' else "0"
-                                        
-                                        write_results({
-                                            "Num_test": num_test,
-                                            "iteration": i,
-                                            "dataset": dataset,
-                                            "taille_ds": taille_ds,
-                                            "algo": algo,
-                                            "parameters_algo": parameters_algo,
-                                            "K": k,
-                                            "Nbre_QIDs": results[8],
-                                            "QIDs": ','.join(results[7]),
-                                            "time": results[5],
-                                            "NCP": results[0],
-                                            "CAVG_before": results[1],
-                                            "CAVG_after": results[2],
-                                            "DM_before": results[3],
-                                            "DM_after": results[4],
-                                            "L_div_score": ','.join(map(str, results[6]))
-                                        }, first_write)
-                                        
-                                        first_write = False
+                                        try :
+                                            main(args)
+                                            results = main(args)
+                                            num_test += 1
+                                            
+                                            parameters_algo = info_loss_choice if algo == 'ola' else "0"
+                                            
+                                            write_results({
+                                                "Num_test": num_test,
+                                                "iteration": i,
+                                                "dataset": dataset,
+                                                "taille_ds": taille_ds,
+                                                "algo": algo,
+                                                "parameters_algo": parameters_algo,
+                                                "K": k,
+                                                "Nbre_QIDs": results[8],
+                                                "QIDs": ','.join(results[7]),
+                                                "SA":results[9],
+                                                "time": results[5],
+                                                "NCP": results[0],
+                                                "CAVG_before": results[1],
+                                                "CAVG_after": results[2],
+                                                "DM_before": results[3],
+                                                "DM_after": results[4],
+                                                "L_div_score": ','.join(map(str, results[6]))
+                                            }, first_write)
+                                            
+                                            first_write = False
+                                            
+                                        except : 
+                                            print("!!!!!!!!!datafly avec k>> par rapport à DS!!!!!!!")

@@ -66,7 +66,7 @@ def ola_Anonymization(data,columns_names,QI_INDEX,QI_NAMES, GEN_PATH,data_name,K
         except TypeError:
             print("Error: Provided dictionary structure is invalid.")
             return None
-    
+    t0 = time.time()
     generalization_rules = {}
     
     for name in QI_NAMES:
@@ -78,7 +78,6 @@ def ola_Anonymization(data,columns_names,QI_INDEX,QI_NAMES, GEN_PATH,data_name,K
     
     
     data = data.applymap(lambda x: str(x) if isinstance(x, int) else x)
-    t0 = time.time()
     data_anonymized, transformation = anonymize(data, generalization_rules=generalization_rules, k=K_VALUE, max_sup=MAX_SUPPRESSION, info_loss=INFO_LOSS_DICT[INFO_LOSS_CHOICE])
     t1 = time.time()-t0
     remaining_columns = [col for col in data_anonymized.columns if col not in QI_NAMES]
