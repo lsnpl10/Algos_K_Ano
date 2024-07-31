@@ -22,7 +22,7 @@ def extend_result(val):
     return val
 
 #la vraie initialisation des paramètres se fait dans __init__ des algos
-def cluster_based_anonymize(k, att_trees, data, qi_index, sa_index, type_alg='oka', **kwargs):
+def cluster_based_anonymize(k, att_trees, data, qi_index, sa_index, type_alg, **kwargs):
     """
     Clustering-based K-anonymity
     """

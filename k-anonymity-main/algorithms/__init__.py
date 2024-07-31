@@ -5,7 +5,6 @@ from .clustering_based import cluster_based_anonymize
 from .top_down_greedy import tdg_anonymize
 from utils.types import AnonMethod
 from .ola import ola_anonymize
-from .incognito import incognito_anonymize
 
 
 def k_anonymize(anon_params):
@@ -42,7 +41,7 @@ def k_anonymize(anon_params):
             anon_params["data"], 
             anon_params["qi_index"], 
             anon_params["sa_index"], 
-            type_alg='oka')
+            anon_params["cluster_algo"])
 
     if anon_params["name"] == AnonMethod.TOPDOWN:
         return tdg_anonymize(
@@ -75,14 +74,3 @@ def k_anonymize(anon_params):
             anon_params['K_VALUE'],
             anon_params['MAX_SUPPRESSION'],
             anon_params['INFO_LOSS_CHOICE'])
-
-    if anon_params["name"] == AnonMethod.INCOGNITO:
-        return incognito_anonymize(
-            anon_params["data"], 
-            anon_params["csv_path"],
-            anon_params["columns_names"], 
-            anon_params["QI_INDEX"], 
-            anon_params["QI_NAMES"], 
-            anon_params["GEN_PATH"], 
-            anon_params["data_name"],
-            anon_params['K_VALUE'])

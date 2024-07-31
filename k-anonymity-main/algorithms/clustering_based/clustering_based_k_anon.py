@@ -8,7 +8,7 @@ import operator
 import random
 import time
 from functools import cmp_to_key
-from tqdm import tqdm
+#from tqdm import tqdm
 
 from algorithms.basic_mondrian.models.numrange import NumRange
 from algorithms.basic_mondrian.utils.utility import (cmp_str, get_num_list_from_str,
@@ -361,12 +361,14 @@ def clustering_kmember(data, k=25):
 
 def adjust_cluster(cluster, residual, k):
     center = cluster.center
+    #print('centre',center)
     dist_dict = {}
     # add random seed to cluster
     for i, t in enumerate(cluster.member):
+        #print('adjust_cluster',center, t)
         dist = r_distance(center, t)
         dist_dict[i] = dist
-    sorted_dict = sorted(dist_dict.iteritems(), key=operator.itemgetter(1))
+    sorted_dict = sorted(dist_dict.items(), key=operator.itemgetter(1))
     need_adjust_index = [t[0] for t in sorted_dict[k:]]
     need_adjust = [cluster.member[t] for t in need_adjust_index]
     residual.extend(need_adjust)
@@ -376,37 +378,66 @@ def adjust_cluster(cluster, residual, k):
     cluster.update_cluster()
 
 
+#ici tous les clusters sont construits en même temps à partir de toutes les graines
 def clustering_oka(data, k=25):
     """
     Group record according to NCP. OKA: one time pass k-means
     """
+    #OKA (GLOUTON) : on prend un enregistrement au hasard et on cherche lesquels sont les plus proches
+    #on ajoute tous les + proches jusqu'à avoir un groupe (cluster) de taille k et l'ajout doit minimiser la perte d'info
+    #on prend l'enregistrement le + loin du 1ier et on fait un cluster avec les + proches de lui de taille k
+    #etc jusqu'à avoir tout mis dans des clusters
     clusters = []
     can_clusters = []
     less_clusters = []
     # randomly choose seed and find k-1 nearest records to form cluster with size k
+    #print('data',data)
+    # print('lendata', len(data))
+    # print('division', len(data) // k )
+    #il fait une liste de taille len(data)//k avec des indexes random parmis tous les index des données
     seed_index = random.sample(range(len(data)), len(data) // k)
+    #print('lenseed',len(seed_index))
+   # print('seed_index',seed_index)
+    #parmis les indexes randoms de départ, on créé un cluster composé de la donnée correspondant à l'index sélectionné (1! donnée)
     for index in seed_index:
         record = data[index]
         can_clusters.append(Cluster([record], record))
+        #print('record1oka',record)
+    #ici on regarde les données qui ne sont pas déjà dans les clusters
+    #la liste data contient les données qui ne sont pas des graines
     data = [t for i, t in enumerate(data[:]) if i not in set(seed_index)]
+    # pdb.set_trace()
+    #on va distribuer les données sans cluster dans les clusters en fonction du minimum de perte d'information qu'ils offrent
+    #et donc en fonction de leur proximité avec les données déjà dans le cluster
     while len(data) > 0:
         record = data.pop()
         index = find_best_cluster_iloss(record, can_clusters)
         can_clusters[index].add_record(record)
+        #print('record2oka',record)
+    # pdb.set_trace()
     residual = []
+    #on vérifie si tous les clusters sont de taille k
+    #si non, on ajoute le cluster "trop vide" à une liste de clusters à compléter (less_clusters)
+    #et si trop remplis, on en retire et on ajoute ces éléments à une liste de résidus pour compléter les clusters trop vides
     for cluster in can_clusters:
         if len(cluster) < k:
             less_clusters.append(cluster)
         else:
             if len(cluster) > k:
+                #la fonction adjust_cluster 
+               # print('cluster, residual, k',cluster, residual, k)
                 adjust_cluster(cluster, residual, k)
             clusters.append(cluster)
     while len(residual) > 0:
         record = residual.pop()
         if len(less_clusters) > 0:
             index = find_best_cluster_iloss(record, less_clusters)
+            # print('index',index)
             less_clusters[index].add_record(record)
-            if less_clusters[index] >= k:
+            # #print('less_clusters[index]',less_clusters[index].size(),'k',k)
+            # print('less_cluster', less_clusters[index])
+            # print('lencluster', len(less_clusters[index]))
+            if len(less_clusters[index]) >= k:
                 clusters.append(less_clusters.pop(index))
         else:
             index = find_best_cluster_iloss(record, clusters)
@@ -461,7 +492,7 @@ def clustering_based_k_anon(att_trees, data, k, QI_num, SA_num, type_alg):
         print("knn | kmember")
         return (0, (0, 0))
     rtime = float(time.time() - start_time)
-    for cluster in tqdm(clusters):
+    for cluster in clusters:
         final_result = []
         for i in range(len(cluster)):
             # Custom! For non QI Values

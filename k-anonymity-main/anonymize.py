@@ -43,13 +43,14 @@ class Anonymizer:
         self.method = args.method
         #assert self.method in ["mondrian", "topdown", "cluster", "mondrian_ldiv", "classic_mondrian", "datafly", "ola", "incognito"]
         #cluster déjà fait et incognito très long donc à voir plus tard
-        assert self.method in ["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola", "incognito"]
+        assert self.method in ["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola", "incognito", "cluster"]
         self.k = args.k
         self.info_loss_choice = args.info_loss_choice
         self.use_is_cat2 = args.use_is_cat2
         self.data_name = args.dataset
         self.csv_path = args.dataset+'.csv'
         self.taille_ds=args.taille_ds
+        self.cluster_algo=args.cluster_algo
         # Data path
         self.path = os.path.join('data', args.dataset)  # trailing /
 
@@ -140,18 +141,27 @@ class Anonymizer:
                 'MAX_SUPPRESSION': 0.0,
                 'INFO_LOSS_CHOICE': self.info_loss_choice #"dm_star_loss", "entropy_loss","prec_loss"
                 })
-            
-        if self.method == AnonMethod.INCOGNITO:
+
+        if self.method == AnonMethod.CLUSTER:
             anon_params.update({
+                'K_VALUE': self.k,
+                "att_trees" :ATT_TREES,
                 'data': data,
-                'csv_path': self.data_path,
-                "columns_names":ATT_NAMES,
                 'QI_INDEX': QI_INDEX,
-                'QI_NAMES': QI_NAMES,
-                'GEN_PATH': self.gen_path,
-                'data_name': self.data_name,
-                'K_VALUE': self.k
+                "sa_index" :SA_INDEX,
+                "cluster_algo":self.cluster_algo,
                 })
+        # if self.method == AnonMethod.INCOGNITO:
+        #     anon_params.update({
+        #         'data': data,
+        #         'csv_path': self.data_path,
+        #         "columns_names":ATT_NAMES,
+        #         'QI_INDEX': QI_INDEX,
+        #         'QI_NAMES': QI_NAMES,
+        #         'GEN_PATH': self.gen_path,
+        #         'data_name': self.data_name,
+        #         'K_VALUE': self.k
+        #         })
             
         anon_params.update({'data': raw_data})
 
@@ -223,9 +233,9 @@ def main(args):
 
 if __name__ == '__main__':
     
-    DATASETS=['movie','analysis','segmentation','distributionmovie','distributionanalysis','distributionsegmentation', 'littlemovie','littleanalysis','littlesegmentation']
-    #algos=["datafly"]
-    algos=["mondrian", "topdown", "classic_mondrian", "ola"]
+    DATASETS=['movie','analysis','segmentation','distributionsegmentation', 'littlemovie','littleanalysis','littlesegmentation']
+    algos=["ola"]
+    #algos=["mondrian", "topdown", "classic_mondrian", "ola"]
     #k_list=[2]
     #algos=["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola","cluster"]
     num_test = 0
@@ -262,66 +272,78 @@ if __name__ == '__main__':
                                 info_loss_choices = [None]
                             for info_loss_choice in info_loss_choices:
                                 print("info_loss_choice for OLA :",info_loss_choice)
-                                for i in range (3):
-                                    print("Algo:",algo)
-                                    print("taille DS :", taille_ds)
-                                    print("k=",k)
-                                    print("nbre qids:", len(QI_INDEX))
-                                    parser = argparse.ArgumentParser('K-Anonymize')
-                                    parser.add_argument('--method', type=str, default=algo,
-                                                        help="K-Anonymity Method")
-                                    parser.add_argument('--k', type=int, default=k,
-                                                        help="K-Anonymity or L-Diversity")
-                                    parser.add_argument('--dataset', type=str, default=dataset,
-                                                        help="Dataset to anonymize")
-                                    parser.add_argument('--taille_ds', type=int, default=taille_ds,
-                                                        help="Taille dataset")
-                                    parser.add_argument('--info_loss_choice', type=str, default=info_loss_choice, 
-                                                        help="Info loss choice for OLA")
-                                    parser.add_argument('--use_is_cat2', type=bool, default=False, help="Choice dyn/stat for numerical QIDs for classic_mondrian")
-                                    args = parser.parse_args()
-                                    if algo == 'classic_mondrian':
-                                        for use_is_cat2 in [False, True]:
-                                            if use_is_cat2 == True :
-                                                #print("DYNAMIC")
-                                                type_hierarchy="dynamic"
-                                            else : 
-                                                #print("STATIC")
-                                                type_hierarchy="static"
-                                            args.use_is_cat2 = use_is_cat2
-                                            results=main(args)
-                                            num_test += 1
-                                            
-                                            parameters_algo = type_hierarchy if algo == 'classic_mondrian' else (info_loss_choice if algo == 'ola' else "0")
-                                            
-                                            write_results({
-                                                "Num_test": num_test,
-                                                "iteration": i,
-                                                "dataset": dataset,
-                                                "taille_ds": taille_ds,
-                                                "algo": algo,
-                                                "parameters_algo": parameters_algo,
-                                                "K": k,
-                                                "Nbre_QIDs": results[8],
-                                                "QIDs": ','.join(results[7]),
-                                                "SA": results[9],
-                                                "time": results[5],
-                                                "NCP": results[0],
-                                                "CAVG_before": results[1],
-                                                "CAVG_after": results[2],
-                                                "DM_before": results[3],
-                                                "DM_after": results[4],
-                                                "L_div_score": ','.join(map(str, results[6]))
-                                            }, first_write)
-                                            
-                                            first_write = False
-                                    else:
-                                        try :
+                                if algo=='cluster':
+                                    cluster_algos=['oka','knn','kmember']
+                                else:
+                                    cluster_algos=[None]
+                                for cluster_algo in cluster_algos:
+                                    
+                                    print("clustering method", cluster_algo)
+                                    for i in range (3):
+                                        print("Algo:",algo)
+                                        print("taille DS :", taille_ds)
+                                        print("k=",k)
+                                        print("nbre qids:", len(QI_INDEX))
+                                        parser = argparse.ArgumentParser('K-Anonymize')
+                                        parser.add_argument('--method', type=str, default=algo,
+                                                            help="K-Anonymity Method")
+                                        parser.add_argument('--k', type=int, default=k,
+                                                            help="K-Anonymity or L-Diversity")
+                                        parser.add_argument('--dataset', type=str, default=dataset,
+                                                            help="Dataset to anonymize")
+                                        parser.add_argument('--taille_ds', type=int, default=taille_ds,
+                                                            help="Taille dataset")
+                                        parser.add_argument('--info_loss_choice', type=str, default=info_loss_choice, 
+                                                            help="Info loss choice for OLA")
+                                        parser.add_argument('--cluster_algo', type=str, default=cluster_algo, 
+                                                            help="Clustering algo choice for clustering")
+                                        parser.add_argument('--use_is_cat2', type=bool, default=False, help="Choice dyn/stat for numerical QIDs for classic_mondrian")
+                                        args = parser.parse_args()
+                                        if algo == 'classic_mondrian':
+                                            for use_is_cat2 in [False, True]:
+                                                if use_is_cat2 == True :
+                                                    #print("DYNAMIC")
+                                                    type_hierarchy="dynamic"
+                                                else : 
+                                                    #print("STATIC")
+                                                    type_hierarchy="static"
+                                                args.use_is_cat2 = use_is_cat2
+                                                results=main(args)
+                                                num_test += 1
+                                                
+                                                parameters_algo = type_hierarchy if algo == 'classic_mondrian' else (info_loss_choice if algo == 'ola' else "0")
+                                                
+                                                write_results({
+                                                    "Num_test": num_test,
+                                                    "iteration": i,
+                                                    "dataset": dataset,
+                                                    "taille_ds": taille_ds,
+                                                    "algo": algo,
+                                                    "parameters_algo": parameters_algo,
+                                                    "K": k,
+                                                    "Nbre_QIDs": results[8],
+                                                    "QIDs": ','.join(results[7]),
+                                                    "SA": results[9],
+                                                    "time": results[5],
+                                                    "NCP": results[0],
+                                                    "CAVG_before": results[1],
+                                                    "CAVG_after": results[2],
+                                                    "DM_before": results[3],
+                                                    "DM_after": results[4],
+                                                    "L_div_score": ','.join(map(str, results[6]))
+                                                }, first_write)
+                                                
+                                                first_write = False
+                                        else:
+                                            #try :
                                             main(args)
                                             results = main(args)
                                             num_test += 1
-                                            
-                                            parameters_algo = info_loss_choice if algo == 'ola' else "0"
+                                            if algo == 'ola':
+                                                parameters_algo = info_loss_choice 
+                                            elif algo =='cluster':
+                                                parameters_algo=cluster_algo
+                                            else: parameters_algo="0"
                                             
                                             write_results({
                                                 "Num_test": num_test,
@@ -344,6 +366,6 @@ if __name__ == '__main__':
                                             }, first_write)
                                             
                                             first_write = False
-                                  
-                                        except : 
-                                            print("!!!!!!!!!datafly avec k>> par rapport à DS!!!!!!!")
+                                      
+                                            #except : 
+                                                #print("!!!!!!!!!datafly avec k>> par rapport à DS!!!!!!!")
