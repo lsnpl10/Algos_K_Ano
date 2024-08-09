@@ -87,13 +87,13 @@ def NCP_dis_merge(partition, addition_set):
     return (len(addition_set) + len(partition)) * NCP(mid), mid
 
 
-def NCP_dis_group(record, partition):
-    """
-    compute the NCP of record and partition
-    """
-    mid = middle_record(record, partition.middle)
-    ncp = NCP(mid)
-    return (1 + len(partition)) * ncp
+# def NCP_dis_group(record, partition):
+#     """
+#     compute the NCP of record and partition
+#     """
+#     mid = middle_record(record, partition.middle)
+#     ncp = NCP(mid)
+#     return (1 + len(partition)) * ncp
 
 
 def middle_record(record1, record2):

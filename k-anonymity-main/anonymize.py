@@ -29,7 +29,7 @@ def write_results(results, first_write=False):
     
     mode = 'w' if first_write else 'a'
     
-    with open('results_glob.csv', mode, newline='') as csvfile:
+    with open('results_datafly_new.csv', mode, newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
         
         if first_write:
@@ -63,7 +63,7 @@ class Anonymizer:
 
         # folder for all results
         res_folder = os.path.join(
-            'results', 
+            'results_datafly_new', 
             args.dataset, 
             self.method)
         #print(res_folder) #path results\dataset\algo
@@ -232,9 +232,9 @@ def main(args):
     #ncp_score, raw_cavg_score, anon_cavg_score, raw_dm_score, anon_dm_score, runtime, anon_sa_scores = anonymizer.anonymize()
 
 if __name__ == '__main__':
-    
-    DATASETS=['movie','analysis','segmentation','distributionsegmentation', 'littlemovie','littleanalysis','littlesegmentation']
-    algos=["ola"]
+    DATASETS=['movie']
+    #DATASETS=['movie','analysis','segmentation','distributionsegmentation', 'littlemovie','littleanalysis','littlesegmentation']
+    algos=["datafly"]
     #algos=["mondrian", "topdown", "classic_mondrian", "ola"]
     #k_list=[2]
     #algos=["mondrian", "topdown", "mondrian_ldiv", "classic_mondrian", "datafly", "ola","cluster"]
@@ -242,10 +242,10 @@ if __name__ == '__main__':
     first_write = True
     for dataset in DATASETS:
         if dataset == 'analysis' or dataset == 'littleanalysis' :
-            TAILLE_DATA_TEST=[100,200,500,750,1000,1250,1500,1750,2000,2216]
+            TAILLE_DATA_TEST=[2216]
             k_list=[2,5,10,15,20,30,50,100,150,200,300]
         elif dataset == 'movie' or dataset == 'littlemovie' :
-            TAILLE_DATA_TEST=[50,100,200,350,500,700,943]
+            TAILLE_DATA_TEST=[943]
             k_list=[2,5,10,15,20,30,50,75,100]
         elif dataset=='distributionsegmentation':
             TAILLE_DATA_TEST=[500,1000,2000,5000,10000,20000,30000,40000,53503]
@@ -334,6 +334,7 @@ if __name__ == '__main__':
                                                 }, first_write)
                                                 
                                                 first_write = False
+                                                
                                         else:
                                             #try :
                                             main(args)

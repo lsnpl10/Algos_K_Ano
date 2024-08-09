@@ -47,5 +47,5 @@ def classic_mondrian_anonymize(k, data, qi_index, mapping_dict=None, is_cat=None
         result_in_order = restored
 
     ncp_score, runtime = eval_result
-
+    print("relax?",relax)
     return result_in_order, (ncp_score, runtime)

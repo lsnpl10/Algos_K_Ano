@@ -72,6 +72,7 @@ class _Table:
         """
 
         global _DEBUG
+        _DEBUG = False
 
         if v:
             _DEBUG = False
@@ -104,9 +105,7 @@ class _Table:
         gen_levels = dict()
         for i, attribute in enumerate(qi_names):
             gen_levels[i] = 0
-        for i, row in enumerate(self.table):
-            if i >= (taille_ds+1):  # Limit the number of rows processed
-                break
+
         for i, row in enumerate(self.table):
 
             qi_sequence = self._get_values(row, qi_names, i)
@@ -139,20 +138,31 @@ class _Table:
         lines = []
         while True:
 
-            # Number of tuples which are not k-anonymous.
-            count = 0
+            # # Number of tuples which are not k-anonymous.
+            # count = 0
 
-            for qi_sequence in qi_frequency:
+            # for qi_sequence in qi_frequency:
 
-                # Check number of occurrences of this sequence:
-                if qi_frequency[qi_sequence][0] < k:
-                    # Update the number of tuples which are not k-anonymous:
-                    count += qi_frequency[qi_sequence][0]
-            self._debug("[DEBUG] %d tuples are not yet k-anonymous..." % count, _DEBUG)
-            self._log("[LOG] %d tuples are not yet k-anonymous..." % count, endl=True, enabled=v)
+            #     # Check number of occurrences of this sequence:
+            #     if qi_frequency[qi_sequence][0] < k:
+            #         # Update the number of tuples which are not k-anonymous:
+            #         count += qi_frequency[qi_sequence][0]
+            # self._debug("[DEBUG] %d tuples are not yet k-anonymous..." % count, _DEBUG)
+            # self._log("[LOG] %d tuples are not yet k-anonymous..." % count, endl=True, enabled=v)
 
+                
+                
+            self._debug("[DEBUG] Suppressing max k non k-anonymous tuples...")
+                # Drop tuples which occur less than k times:
+            needGeneralisation = False
+            for qi_sequence, data in qi_frequency.items():
+                if data[0] < k:
+                    needGeneralisation = True
+                    break
+                
+                
             # Limit the number of tuples to suppress to k:
-            if count > k:
+            if  needGeneralisation:
 
                 # Get the attribute whose domain has the max cardinality:
                 max_cardinality, max_attribute_idx = 0, None
@@ -246,25 +256,19 @@ class _Table:
 
             else:
 
-                self._debug("[DEBUG] Suppressing max k non k-anonymous tuples...")
-                # Drop tuples which occur less than k times:
-                qi_sequences = []
-                for qi_sequence, data in qi_frequency.items():
-                    if data[0] < k:
-                        qi_sequences.append(qi_sequence)
-                for qi_sequence in qi_sequences:
-                    qi_frequency.pop(qi_sequence)
+               
 
-                self._log("[LOG] Suppressed %d tuples." % count, endl=True, enabled=v)
+                # self._log("[LOG] Suppressed %d tuples." % count, endl=True, enabled=v)
 
                 # Start to read the table file from the start:
                 self.table.seek(0)
 
                 self._debug("[DEBUG] Writing the anonymized table...", _DEBUG)
                 self._log("[LOG] Writing anonymized table...", endl=True, enabled=v)
+                # print(f"qi_frequency : {len(qi_frequency)}")
                 for i, row in enumerate(self.table):
-                    if i>=(taille_ds+1):
-                        break
+                    # if i>=(taille_ds+1):
+                    #     break
                     self._debug("[DEBUG] Reading row %d from original table..." % i, _DEBUG)
                     table_row = self._get_values(row, list(self.attributes), i)
                     # print("i",i)
@@ -290,6 +294,7 @@ class _Table:
         # output.close()
 
         self._log("[LOG] All done.", endl=True, enabled=v)
+        # print("nombre de lignes dans newtable : ",len(lines))
         return lines
 
     @staticmethod
